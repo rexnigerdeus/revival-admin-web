@@ -25,10 +25,15 @@ export default async function AdminDashboard() {
 
   // 3. Traiter et décoder les utilisateurs
   const users = authData.users.map((u) => {
-    // On extrait le téléphone en retirant '@revival.culture' de l'email
+    // On extrait le téléphone
     const phone = u.email?.replace('@revival.culture', '') || 'Inconnu';
-    // On récupère le nom depuis les métadonnées
-    const name = u.user_metadata?.full_name || u.user_metadata?.name || u.user_metadata?.display_name || 'Anonyme';
+    
+    // SÉCURITÉ : On fouille dans `user_metadata` ET `raw_user_meta_data`
+    // (L'API Admin de Supabase utilise parfois raw_user_meta_data)
+    const meta = u.user_metadata || (u as any).raw_user_meta_data || {};
+    
+    // On ratisse large pour trouver la bonne clé d'enregistrement
+    const name = meta.display_name || meta.displayName || meta.full_name || meta.fullName || meta.name || meta.first_name || 'Anonyme';
     
     return {
       id: u.id,
